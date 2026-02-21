@@ -6,6 +6,7 @@ import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { MoveTilesSystem } from "../GridSystem/MoveTilesSystem";
 import { GridSize } from "../GridSystem/GridProperties";
 import { TileSystem } from "../TileProperties/TileSystem";
+import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
 
 // Менеджер игры, управляющий логикой игры и событиями
 
@@ -20,6 +21,9 @@ class GameManager extends cc.Component
     @cc._decorator.property(cc.Node)
     private gridSizeNode: cc.Node = null!;
 
+    @cc._decorator.property(cc.Node)
+    private randomTileSystemNode: cc.Node = null!;
+
     // Связанные методы для событий
     private boundOnTileClick: (event: TileClickEvent) => void;
     private boundOnTilesRemoved: (event: TilesRemovedEvent) => void;
@@ -27,6 +31,7 @@ class GameManager extends cc.Component
     // Объявлялем поле для хранения ссылки на GridGenerator и GridSize
     private gridGenerator: GridGenerator = null!;
     private gridSize: GridSize = null!;
+    private randomTileSystem: RandomTileSystem = null!;
     
     // Объявляем экземпляр TilesGroupSystem, который будет использоваться для поиска групп связанных тайлов
     private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
@@ -46,6 +51,9 @@ class GameManager extends cc.Component
         // Получаем компонент GridSize
         this.gridSize = this.gridSizeNode.getComponent(GridSize);
 
+        // Получаем компонент RandomTileSystem
+        this.randomTileSystem = this.randomTileSystemNode.getComponent(RandomTileSystem)!;
+
         // Инициализируем систему группировки тайлов, передавая ей ссылку на GridGenerator для доступа к данным 
         // о сетке
         this.tilesGroupSystem.Init(this.gridGenerator);
@@ -56,7 +64,7 @@ class GameManager extends cc.Component
         
         // Инициализируем систему перемещения тайлов, передавая ей ссылки на GridGenerator и GridSize для доступа к данным 
         // о сетке и ее размерах
-        this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize);
+        this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize, this.randomTileSystem);
 
         // Поддготовка связанных методов для событий
         this.boundOnTileClick = this.onTileClick.bind(this);

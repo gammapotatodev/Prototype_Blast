@@ -43,7 +43,6 @@ export class MoveTilesSystem
             for (let r = 0; r < rows; r++)
             {
                 const tile = this.grid.gridTiles[r][c];
-
                 if (tile !== null)
                 {
                     if (r !== targetRow)

@@ -14,6 +14,19 @@ import { UpdateUISystem } from "./UpdateUISystem";
 @cc._decorator.ccclass
 class GameManager extends cc.Component
 {
+    @cc._decorator.property(cc.Node)
+    private loseScreen: cc.Node = null!;
+
+    @cc._decorator.property(cc.Label)
+    private loseScoreLabel: cc.Label = null!;
+
+    @cc._decorator.property(cc.Node)
+    private winScreen: cc.Node = null!;
+
+    // Костыль "для заморозки" игры при взаимодействии с экраном выигрыша/проигрыша
+    @cc._decorator.property(cc.Node)
+    private gridHolderNode: cc.Node = null!;
+
     // Ссылка на ноду с GridGenerator
     @cc._decorator.property(cc.Node)
     private gridNode: cc.Node = null!;
@@ -48,7 +61,10 @@ class GameManager extends cc.Component
     private updateUISystem: UpdateUISystem = null!;
 
     private currentScore: number = 0;
+    private startMovesCount: number = 0;
     private currentMovesCount: number = 0;
+    private goalScore: number = 0;
+    //private canClick: boolean = true;
 
     onLoad(): void 
     {
@@ -74,7 +90,10 @@ class GameManager extends cc.Component
         this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize, this.randomTileSystem);
 
         this.updateUISystem = this.getComponent(UpdateUISystem)!;
-        this.currentMovesCount = this.updateUISystem.movesCount;
+        this.startMovesCount = this.updateUISystem.movesCount;
+        this.currentMovesCount = this.startMovesCount;
+        this.goalScore = this.updateUISystem.goalScore;
+        this.updateUISystem.UpdateUI(this.currentScore, this.currentMovesCount);
         
 
         // Поддготовка связанных методов для событий
@@ -97,8 +116,11 @@ class GameManager extends cc.Component
         const group = this.tilesGroupSystem.FindConnectedTilesGroup(event.row, event.col, event.tileGroup);
         
         // Если найдено 2 или более связанных тайлов, удаляем их
-        if(group.length >= 2)
+        if(group.length >= 2) //&& this.canClick)
+        {
+            //this.canClick = false;
             this.RemoveTiles(group);
+        }
         
         // Проверяем, есть ли еще возможные ходы после удаления тайлов
         if(!this.tilesGroupSystem.HasAnyMoves())
@@ -132,16 +154,40 @@ class GameManager extends cc.Component
                 tile.destroy();
             }
         }
-                
+        
         this.currentMovesCount--;
         const gaindeScore = this.updateUISystem.ScoreMultiplier * tiles.length; 
         this.currentScore += gaindeScore;
         const updateScoreEvent = new UpdateUIEvent(this.currentScore, this.currentMovesCount);
         EventManager.instance.emit(updateScoreEvent);
+        this.CheckGameOver();
 
         // ДОБАВИТЬ ЭМИТ СОБЫТИЯ ПОСЛЕ УДАЛЕНИЯ ДЛЯ СДВИГА ОСТАЛЬНЫХ
         const moveEvent = new TilesRemovedEvent(tiles, tiles.length);
         EventManager.instance.emit(moveEvent);
+        //this.canClick = true;
+    }
+
+    private CheckGameOver(): void
+    {
+        if(this.currentScore >= this.goalScore)
+        {
+            this.winScreen.active = true;
+            this.gridHolderNode.active = false;
+            this.loseScreen.active = false;
+        }
+        else if(this.currentMovesCount <= 0)
+        {
+            this.loseScreen.active = true;
+            this.gridHolderNode.active = false;
+            this.winScreen.active = false;
+            this.loseScoreLabel.string = this.currentScore.toString() + " / " + this.goalScore.toString();
+        }
+    }
+
+    private RestartGame(): void
+    {
+        cc.director.loadScene(cc.director.getScene().name);
     }
 
     onDestroy(): void 
@@ -150,11 +196,6 @@ class GameManager extends cc.Component
         EventManager.instance.off(TileClickEvent, this.boundOnTileClick);
         EventManager.instance.off(TilesRemovedEvent, this.boundOnTilesRemoved);
         EventManager.instance.off(UpdateUIEvent, this.boundOnUpdateUI);
-        // Явно обнуляем ссылки на всякий случай
-        this.gridGenerator = null!;
-        this.tilesGroupSystem = null!;
-        //this.tilePositionSystem = null!;
-        this.moveTiles = null!;
         
     }
 }

@@ -3,7 +3,7 @@ import { TileSystem } from "../TileProperties/TileSystem";
 
 // Система для поиска групп связанных тайлов и проверки наличия возможных ходов
 
-@cc._decorator.ccclass
+//@cc._decorator.ccclass
 export class TilesGroupSystem
 {
     // Ссылка на GridGenerator для доступа к данным о сетке

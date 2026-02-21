@@ -589,7 +589,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 55.62,
+      "width": 124.61,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -641,8 +641,8 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_string": "10",
-    "_N$string": "10",
+    "_string": "Ходы",
+    "_N$string": "Ходы",
     "_fontSize": 50,
     "_lineHeight": 40,
     "_enableWrapText": true,
@@ -782,7 +782,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 97.87,
+      "width": 91.8,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -834,8 +834,8 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_string": "Label",
-    "_N$string": "Label",
+    "_string": "Очки",
+    "_N$string": "Очки",
     "_fontSize": 40,
     "_lineHeight": 40,
     "_enableWrapText": true,
@@ -1162,6 +1162,9 @@
     "_components": [
       {
         "__id__": 27
+      },
+      {
+        "__id__": 30
       }
     ],
     "_prefab": null,
@@ -1319,5 +1322,23 @@
       }
     ],
     "_id": "f8QFrGSg1LoqL60rtsmJun"
+  },
+  {
+    "__type__": "5c5dcQviGhItZzcYoOZWZ5h",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 26
+    },
+    "_enabled": true,
+    "scoreLabel": {
+      "__id__": 16
+    },
+    "movesLabel": {
+      "__id__": 12
+    },
+    "goalScore": 100,
+    "movesCount": 20,
+    "_id": "53xUtVQRFG8pgnZ/tp4ryo"
   }
 ]

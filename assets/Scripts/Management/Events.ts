@@ -39,6 +39,19 @@ export class TilesRemovedEvent extends BaseEvent
         super(TilesRemovedEvent.Type);
     }
 }
+ 
+export class UpdateUIEvent extends BaseEvent
+{
+    public static readonly Type = "UpdateUIEvent";
+
+    constructor(
+        public readonly score: number,
+        public readonly moves: number
+    )
+    {
+        super(UpdateUIEvent.Type);
+    }
+}
 
 // export class DeleteTilesGroupEvent extends BaseEvent
 // {

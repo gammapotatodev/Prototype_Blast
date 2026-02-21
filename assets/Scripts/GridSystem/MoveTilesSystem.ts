@@ -5,7 +5,7 @@ import { TileSystem } from "../TileProperties/TileSystem";
 import { RandomTileSystem } from "./RandomTileSystem";
 import { ClickHandle } from "../Management/ClickHandle";
 
-@cc._decorator.ccclass
+//@cc._decorator.ccclass
 export class MoveTilesSystem 
 {
     // @cc._decorator.property(RandomTileSystem)

@@ -2983,8 +2983,8 @@
     "movesLabel": {
       "__id__": 12
     },
-    "goalScore": 100,
-    "movesCount": 2,
+    "goalScore": 500,
+    "movesCount": 10,
     "ScoreMultiplier": 10,
     "_id": "53xUtVQRFG8pgnZ/tp4ryo"
   },

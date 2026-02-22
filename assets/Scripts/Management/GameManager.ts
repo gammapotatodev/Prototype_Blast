@@ -97,7 +97,7 @@ class GameManager extends cc.Component
         }
         
         // Проверяем, есть ли еще возможные ходы после удаления тайлов
-        if(!this.tilesGroupSystem.HasAnyMoves() && this.refreshesCount < 3)
+        if(!this.tilesGroupSystem.HasAnyMoves())
         {
             //cc.log("No moves");
             //this.canClick = false;
@@ -121,6 +121,11 @@ class GameManager extends cc.Component
 
     private onRefreshTiles(): void
     {
+        if(this.refreshesCount > 3)
+        {
+            EventManager.instance.emit(new GameOverEvent(GameResultType.Lose, this.tilesRemoveSystem.Score, this.goalScore));
+            return;
+        }
         this.refreshTilesSystem.RefreshGrid();
         this.tilesGroupSystem.Init(this.gridGenerator);
     }
@@ -147,8 +152,14 @@ class GameManager extends cc.Component
 
     public DebugRefreshGrid(): void
     {
+        if(this.refreshesCount < 3)
+        {
+            this.refreshesCount++;
+            EventManager.instance.emit(new RefreshGridEvent());
+        }
+        else if(this.refreshesCount >= 3)
+            EventManager.instance.emit(new GameOverEvent(GameResultType.Lose, this.tilesRemoveSystem.Score, this.goalScore));
         //this.canClick = false;
-        EventManager.instance.emit(new RefreshGridEvent());
         //this.canClick = true;
         //this.onRefreshTiles();
     }

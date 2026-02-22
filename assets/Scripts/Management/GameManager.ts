@@ -8,6 +8,7 @@ import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
 import { UpdateUISystem } from "./UpdateUISystem";
 import { RemoveTilesSystem } from "./RemoveTilesSystem";
 import { RefreshGridSystem } from "./RefreshGridSystem";
+import { BoosterBomb } from "../GameFeatures/BoosterBomb";
 
 // Менеджер игры, управляющий логикой игры и событиями
 
@@ -32,6 +33,8 @@ class GameManager extends cc.Component
     private randomTileSystem: RandomTileSystem = null!;
     private tilesRemoveSystem: RemoveTilesSystem = null!;
     private refreshTilesSystem: RefreshGridSystem = null!;
+
+    private activeBoosterBomb: BoosterBomb = null!;
     
     private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
     
@@ -82,6 +85,11 @@ class GameManager extends cc.Component
     // Метод для обработки кликов по тайлам
     private onTileClick(event: TileClickEvent): void
     {
+        if (this.activeBoosterBomb) {
+            this.activeBoosterBomb.explode(event.row, event.col);
+            this.activeBoosterBomb = null;
+            return;
+        }
         // if(!this.canClick) 
         //     return;
         // Используем TilesGroupSystem для поиска всех связанных тайлов, которые принадлежат к той же группе, 
@@ -162,6 +170,12 @@ class GameManager extends cc.Component
         //this.canClick = false;
         //this.canClick = true;
         //this.onRefreshTiles();
+    }
+    
+    public ActivateBomb(): void 
+    {
+        if (this.activeBoosterBomb) return;
+        this.activeBoosterBomb = new BoosterBomb(this.gridGenerator.gridTiles);
     }
 
     onDestroy(): void 

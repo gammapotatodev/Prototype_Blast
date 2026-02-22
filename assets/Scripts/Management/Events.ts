@@ -1,3 +1,9 @@
+export enum GameResultType
+{
+    Win,
+    Lose
+}
+
 
 // Базовый класс для всех событий. Содержит только тип события, который используется для 
 // идентификации события при его запуске и обработке
@@ -61,4 +67,19 @@ export class RefreshGridEvent extends BaseEvent
     {
         super(RefreshGridEvent.Type);
     }
+}
+
+export class GameOverEvent extends BaseEvent
+{
+    public static readonly Type = "GameOverEvent";
+    
+    constructor(
+        public readonly resultType: GameResultType,
+        public readonly score: number,
+        public readonly goalScore: number
+    )
+    {
+        super(GameOverEvent.Type);
+    }
+
 }

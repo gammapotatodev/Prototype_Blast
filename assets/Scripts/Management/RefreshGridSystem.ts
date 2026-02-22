@@ -3,7 +3,6 @@ import { GridSize } from "../GridSystem/GridProperties";
 import { TileSystem } from "../TileProperties/TileSystem";
 
 
-
 @cc._decorator.ccclass
 export class RefreshGridSystem
 {
@@ -55,20 +54,19 @@ export class RefreshGridSystem
             for(let col = 0; col < gridData.width; col++)
             {
                 const tileNode = allTiles[index];
-
-                gridTiles[row][col] = tileNode;
                 
+                tileNode.setPosition(startX + col * cellSize, startY + row * cellSize);
+                
+                gridTiles[row][col] = tileNode;
                 
                 const tileComp = tileNode.getComponent(TileSystem);
                 
                 tileComp.row = row;
                 tileComp.col = col;
-                
-                tileNode.setPosition(startX + col * cellSize, startY + row * cellSize);
-                
+                //tileComp.groupIndex = index; // сохраняем группу, так как она не меняется при перемешивании
+                 
                 index++;
             }
         }
-
     }
 }

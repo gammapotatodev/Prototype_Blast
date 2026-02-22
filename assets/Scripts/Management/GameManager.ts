@@ -1,13 +1,12 @@
 import { EventManager } from "./EventManager";
 import { TileClickEvent, TilesRemovedEvent, UpdateUIEvent } from "./Events";
 import { TilesGroupSystem } from "../GridSystem/TilesGroupSystem";
-//import { TilePositionSystem } from "../GridSystem/TilePositionSystem";
 import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { MoveTilesSystem } from "../GridSystem/MoveTilesSystem";
 import { GridSize } from "../GridSystem/GridProperties";
-import { TileSystem } from "../TileProperties/TileSystem";
 import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
 import { UpdateUISystem } from "./UpdateUISystem";
+import { RemoveTilesSystem } from "./RemoveTilesSystem";
 
 // Менеджер игры, управляющий логикой игры и событиями
 
@@ -15,13 +14,16 @@ import { UpdateUISystem } from "./UpdateUISystem";
 class GameManager extends cc.Component
 {
     @cc._decorator.property(cc.Node)
-    private loseScreen: cc.Node = null!;
+    private resultScreen: cc.Node = null!;
+
+    @cc._decorator.property(cc.Label)
+    private mainTextLabel: cc.Label = null!;
+
+    @cc._decorator.property(cc.Label)
+    private WinScoreLabel: cc.Label = null!;
 
     @cc._decorator.property(cc.Label)
     private loseScoreLabel: cc.Label = null!;
-
-    @cc._decorator.property(cc.Node)
-    private winScreen: cc.Node = null!;
 
     // Костыль "для заморозки" игры при взаимодействии с экраном выигрыша/проигрыша
     @cc._decorator.property(cc.Node)
@@ -47,12 +49,10 @@ class GameManager extends cc.Component
     private gridGenerator: GridGenerator = null!;
     private gridSize: GridSize = null!;
     private randomTileSystem: RandomTileSystem = null!;
+    private tilesRemoveSystem: RemoveTilesSystem = null!;
     
     // Объявляем экземпляр TilesGroupSystem, который будет использоваться для поиска групп связанных тайлов
     private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
-    
-    // Объявляем экземпляр TilePositionSystem, который будет использоваться для получения позиций тайлов
-    //private tilePositionSystem: TilePositionSystem = new TilePositionSystem();
     
     // Объявляем поле для хранения экземпляра MoveTilesSystem, 
     // который будет использоваться для перемещения оставшихся тайлов после удаления
@@ -60,16 +60,24 @@ class GameManager extends cc.Component
 
     private updateUISystem: UpdateUISystem = null!;
 
-    private currentScore: number = 0;
     private startMovesCount: number = 0;
-    private currentMovesCount: number = 0;
     private goalScore: number = 0;
-    //private canClick: boolean = true;
 
     onLoad(): void 
     {
+        this.resultScreen.active = false;
+        this.WinScoreLabel.node.active = false;
+        this.loseScoreLabel.node.active = false;
+        this.gridHolderNode.active = true;
+
         // Получаем компонент GridGenerator
         this.gridGenerator = this.gridNode.getComponent(GridGenerator)!;
+        
+        this.updateUISystem = this.getComponent(UpdateUISystem)!;
+        this.startMovesCount = this.updateUISystem.movesCount;
+        this.goalScore = this.updateUISystem.goalScore;
+        
+        this.tilesRemoveSystem = new RemoveTilesSystem(this.gridGenerator, this.updateUISystem, 0, this.startMovesCount);
         
         // Получаем компонент GridSize
         this.gridSize = this.gridSizeNode.getComponent(GridSize);
@@ -81,20 +89,9 @@ class GameManager extends cc.Component
         // о сетке
         this.tilesGroupSystem.Init(this.gridGenerator);
         
-        // Инициализируем систему получения позиций тайлов, передавая ей ссылку на GridGenerator для доступа к данным 
-        // о сетке
-        //this.tilePositionSystem.Init(this.gridGenerator);
-        
         // Инициализируем систему перемещения тайлов, передавая ей ссылки на GridGenerator и GridSize для доступа к данным 
         // о сетке и ее размерах
-        this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize, this.randomTileSystem);
-
-        this.updateUISystem = this.getComponent(UpdateUISystem)!;
-        this.startMovesCount = this.updateUISystem.movesCount;
-        this.currentMovesCount = this.startMovesCount;
-        this.goalScore = this.updateUISystem.goalScore;
-        this.updateUISystem.UpdateUI(this.currentScore, this.currentMovesCount);
-        
+        this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize, this.randomTileSystem);   
 
         // Поддготовка связанных методов для событий
         this.boundOnTileClick = this.onTileClick.bind(this);
@@ -119,7 +116,11 @@ class GameManager extends cc.Component
         if(group.length >= 2) //&& this.canClick)
         {
             //this.canClick = false;
-            this.RemoveTiles(group);
+            this.tilesRemoveSystem.RemoveTiles(group);
+            this.CheckGameOver(
+                this.tilesRemoveSystem.Score,
+                this.tilesRemoveSystem.Moves
+            );
         }
         
         // Проверяем, есть ли еще возможные ходы после удаления тайлов
@@ -130,8 +131,6 @@ class GameManager extends cc.Component
 
     private onUpdateUI(event: UpdateUIEvent): void
     {
-        // this.currentScore = event.score;
-        // this.currentMovesCount = event.moves;
         this.updateUISystem.UpdateUI(event.score, event.moves);
     }
 
@@ -141,50 +140,28 @@ class GameManager extends cc.Component
         this.moveTiles.ApplyMove();
     }
 
-    // Метод для удаления тайлов из сетки и уничтожения их нод
-    private RemoveTiles(tiles: cc.Node[]): void
+    // ВЫНЕСТИ В ОТДЕЛЬНЫЙ СКРИПТ ЧТОБЫ ОБЛЕГЧИТЬ МЕНЕДЖЕР ИГРЫ
+    private CheckGameOver(score: number, moves: number): void
     {
-        for(let tile of tiles)
+        if(score >= this.goalScore)
         {
-            const tileComp = tile.getComponent(TileSystem)!;
-            //const pos = this.tilePositionSystem.GetTilePosition(tile);
-            if(tileComp.row !== -1 && tileComp.col !== -1)
-            {
-                this.gridGenerator.gridTiles[tileComp.row][tileComp.col] = null;
-                tile.destroy();
-            }
-        }
-        
-        this.currentMovesCount--;
-        const gaindeScore = this.updateUISystem.ScoreMultiplier * tiles.length; 
-        this.currentScore += gaindeScore;
-        const updateScoreEvent = new UpdateUIEvent(this.currentScore, this.currentMovesCount);
-        EventManager.instance.emit(updateScoreEvent);
-        this.CheckGameOver();
-
-        // ДОБАВИТЬ ЭМИТ СОБЫТИЯ ПОСЛЕ УДАЛЕНИЯ ДЛЯ СДВИГА ОСТАЛЬНЫХ
-        const moveEvent = new TilesRemovedEvent(tiles, tiles.length);
-        EventManager.instance.emit(moveEvent);
-        //this.canClick = true;
-    }
-
-    private CheckGameOver(): void
-    {
-        if(this.currentScore >= this.goalScore)
-        {
-            this.winScreen.active = true;
+            this.mainTextLabel.string = "ПОБЕДИЛ!";
+            this.WinScoreLabel.node.active = true;
+            this.WinScoreLabel.string = "Ты набрал нужное количество\nочков, молодец!";
+            this.resultScreen.active = true;
             this.gridHolderNode.active = false;
-            this.loseScreen.active = false;
         }
-        else if(this.currentMovesCount <= 0)
+        else if(moves <= 0)
         {
-            this.loseScreen.active = true;
+            this.mainTextLabel.string = "ПРОИГРАЛ!";
+            this.loseScoreLabel.node.active = true;
+            this.loseScoreLabel.string = "Твои очки: " + score.toString() + " / " + this.goalScore.toString();
+            this.resultScreen.active = true;
             this.gridHolderNode.active = false;
-            this.winScreen.active = false;
-            this.loseScoreLabel.string = this.currentScore.toString() + " / " + this.goalScore.toString();
         }
     }
 
+    // ВЫНЕСТИ В ОТДЕЛЬНЫЙ СКРИПТ ЧТОБЫ ОБЛЕГЧИТЬ МЕНЕДЖЕР ИГРЫ
     private RestartGame(): void
     {
         cc.director.loadScene(cc.director.getScene().name);

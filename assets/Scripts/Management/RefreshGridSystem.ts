@@ -57,12 +57,13 @@ export class RefreshGridSystem
                 const tileNode = allTiles[index];
 
                 gridTiles[row][col] = tileNode;
-
+                
+                
                 const tileComp = tileNode.getComponent(TileSystem);
-
+                
                 tileComp.row = row;
                 tileComp.col = col;
-
+                
                 tileNode.setPosition(startX + col * cellSize, startY + row * cellSize);
                 
                 index++;

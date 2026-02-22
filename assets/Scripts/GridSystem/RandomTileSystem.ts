@@ -15,8 +15,4 @@ export class RandomTileSystem extends cc.Component
         const randomTileIndex = Math.floor(Math.random() * this.tilePrefabs.length);
         return { prefab: this.tilePrefabs[randomTileIndex], index: randomTileIndex };
     }
-    public getPrefabByIndex(index: number): cc.Prefab
-    {
-        return this.tilePrefabs[index];
-    }
 }

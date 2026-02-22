@@ -43,7 +43,6 @@ export class RemoveTilesSystem
         this.currentScore += gainedScore;
 
         EventManager.instance.emit(new UpdateUIEvent(this.currentScore, this.currentMoves));
-        EventManager.instance.emit(new TilesRemovedEvent(tiles, tiles.length));
         
     }
 

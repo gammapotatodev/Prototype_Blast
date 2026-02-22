@@ -15,12 +15,6 @@ export abstract class BombSystem
         this.grid = grid;
     }
     
-    public explode(centerRow: number, centerCol: number): void
-    {
-        const cells = this.getCellsInRadius(centerRow, centerCol);
-        this.burnCells(cells);
-    }
-    
     protected getCellsInRadius(row: number, col: number): cc.Node[]
     {
         const result: cc.Node[] = [];
@@ -53,7 +47,5 @@ export abstract class BombSystem
             c < this.grid[0].length
         );
     }
-
-    protected abstract burnCells(cells: cc.Node[]): void;
 
 }

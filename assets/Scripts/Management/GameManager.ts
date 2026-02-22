@@ -33,19 +33,16 @@ class GameManager extends cc.Component
     private randomTileSystem: RandomTileSystem = null!;
     private tilesRemoveSystem: RemoveTilesSystem = null!;
     private refreshTilesSystem: RefreshGridSystem = null!;
-
     private activeBoosterBomb: BoosterBomb = null!;
+    private moveTiles : MoveTilesSystem = null!;
+    private updateUISystem: UpdateUISystem = null!;
     
     private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
-    
-    private moveTiles : MoveTilesSystem = null!;
-
-    private updateUISystem: UpdateUISystem = null!;
 
     private startMovesCount: number = 0;
     private goalScore: number = 0;
-    //private canClick: boolean = true;
     private refreshesCount: number = 0;
+    private isAnimating: boolean = false;
 
     onLoad(): void 
     {
@@ -85,33 +82,32 @@ class GameManager extends cc.Component
     // Метод для обработки кликов по тайлам
     private onTileClick(event: TileClickEvent): void
     {
-        if (this.activeBoosterBomb) {
-            this.activeBoosterBomb.explode(event.row, event.col);
+        if(this.isAnimating)
+            return;
+        if (this.activeBoosterBomb) 
+        {
+            this.isAnimating = true;
+            this.activeBoosterBomb.explode(event.row, event.col);   
             this.activeBoosterBomb = null;
             return;
         }
-        // if(!this.canClick) 
-        //     return;
         // Используем TilesGroupSystem для поиска всех связанных тайлов, которые принадлежат к той же группе, 
         // что и кликнутый тайл
         const group = this.tilesGroupSystem.FindConnectedTilesGroup(event.row, event.col, event.tileGroup);
         
         // Если найдено 2 или более связанных тайлов, удаляем их
-        if(group.length >= 2) //&& this.canClick)
+        if(group.length >= 2)
         {
-            //this.canClick = false;
-            this.tilesRemoveSystem.RemoveTiles(group);
-            this.CheckGameOver(this.tilesRemoveSystem.Score, this.tilesRemoveSystem.Moves);
+            EventManager.instance.emit(
+                new TilesRemovedEvent(group, group.length)
+            );
         }
         
         // Проверяем, есть ли еще возможные ходы после удаления тайлов
         if(!this.tilesGroupSystem.HasAnyMoves())
         {
-            //cc.log("No moves");
-            //this.canClick = false;
             this.refreshesCount++;
             EventManager.instance.emit(new RefreshGridEvent());
-            //this.canClick = true;
         }
     }
 
@@ -123,8 +119,18 @@ class GameManager extends cc.Component
     // Метод для обработки события удаления тайлов
     private onTilesRemoved(event: TilesRemovedEvent): void
     {
-        this.moveTiles.ApplyMove();
-        //this.canClick = true;
+        this.isAnimating = true;
+        this.tilesRemoveSystem.RemoveTiles(event.removedTiles);
+        this.CheckGameOver(
+            this.tilesRemoveSystem.Score,
+            this.tilesRemoveSystem.Moves
+        );
+
+        this.scheduleOnce(() =>
+        {
+            this.moveTiles.ApplyMove();
+            this.isAnimating = false;
+        }, 0.3);
     }
 
     private onRefreshTiles(): void
@@ -134,8 +140,13 @@ class GameManager extends cc.Component
             EventManager.instance.emit(new GameOverEvent(GameResultType.Lose, this.tilesRemoveSystem.Score, this.goalScore));
             return;
         }
+        this.isAnimating = true;
         this.refreshTilesSystem.RefreshGrid();
         this.tilesGroupSystem.Init(this.gridGenerator);
+        this.scheduleOnce(() =>
+        {
+            this.isAnimating = false;
+        }, 0.5);
     }
 
     private CheckGameOver(score: number, moves: number): void
@@ -167,9 +178,6 @@ class GameManager extends cc.Component
         }
         else if(this.refreshesCount >= 3)
             EventManager.instance.emit(new GameOverEvent(GameResultType.Lose, this.tilesRemoveSystem.Score, this.goalScore));
-        //this.canClick = false;
-        //this.canClick = true;
-        //this.onRefreshTiles();
     }
     
     public ActivateBomb(): void 
@@ -180,7 +188,7 @@ class GameManager extends cc.Component
 
     onDestroy(): void 
     {
-        // Отписка от события
+        // Отписки от событий
         EventManager.instance.off(TileClickEvent, this.boundOnTileClick);
         EventManager.instance.off(TilesRemovedEvent, this.boundOnTilesRemoved);
         EventManager.instance.off(UpdateUIEvent, this.boundOnUpdateUI);

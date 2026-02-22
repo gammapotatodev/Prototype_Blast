@@ -4,4 +4,6 @@ export class TileSystem extends cc.Component
     row: number = 0;
     col: number = 0;
     groupIndex: number = 0;
+    
 }
+

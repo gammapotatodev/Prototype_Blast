@@ -1,5 +1,5 @@
 import { EventManager } from "./EventManager";
-import { TileClickEvent, TilesRemovedEvent, UpdateUIEvent } from "./Events";
+import { TileClickEvent, TilesRemovedEvent, UpdateUIEvent, RefreshGridEvent } from "./Events";
 import { TilesGroupSystem } from "../GridSystem/TilesGroupSystem";
 import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { MoveTilesSystem } from "../GridSystem/MoveTilesSystem";
@@ -7,6 +7,7 @@ import { GridSize } from "../GridSystem/GridProperties";
 import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
 import { UpdateUISystem } from "./UpdateUISystem";
 import { RemoveTilesSystem } from "./RemoveTilesSystem";
+import { RefreshGridSystem } from "./RefreshGridSystem";
 
 // Менеджер игры, управляющий логикой игры и событиями
 
@@ -44,12 +45,14 @@ class GameManager extends cc.Component
     private boundOnTileClick: (event: TileClickEvent) => void;
     private boundOnTilesRemoved: (event: TilesRemovedEvent) => void;
     private boundOnUpdateUI: (event: UpdateUIEvent) => void;
+    private boundOnRefreshGrid: () => void;
 
     // Объявлялем поле для хранения ссылки на GridGenerator и GridSize
     private gridGenerator: GridGenerator = null!;
     private gridSize: GridSize = null!;
     private randomTileSystem: RandomTileSystem = null!;
     private tilesRemoveSystem: RemoveTilesSystem = null!;
+    private refreshTilesSystem: RefreshGridSystem = null!;
     
     // Объявляем экземпляр TilesGroupSystem, который будет использоваться для поиска групп связанных тайлов
     private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
@@ -91,23 +94,26 @@ class GameManager extends cc.Component
         
         // Инициализируем систему перемещения тайлов, передавая ей ссылки на GridGenerator и GridSize для доступа к данным 
         // о сетке и ее размерах
-        this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize, this.randomTileSystem);   
+        this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize, this.randomTileSystem);
+        
+        this.refreshTilesSystem = new RefreshGridSystem(this.gridGenerator, this.gridSize);
 
         // Поддготовка связанных методов для событий
         this.boundOnTileClick = this.onTileClick.bind(this);
         this.boundOnTilesRemoved = this.onTilesRemoved.bind(this);
         this.boundOnUpdateUI = this.onUpdateUI.bind(this);
+        this.boundOnRefreshGrid = this.onRefreshTiles.bind(this);
         
         // Подписываемся на события
         EventManager.instance.on(TileClickEvent, this.boundOnTileClick);
         EventManager.instance.on(TilesRemovedEvent, this.boundOnTilesRemoved);
         EventManager.instance.on(UpdateUIEvent, this.boundOnUpdateUI);
+        EventManager.instance.on(RefreshGridEvent, this.boundOnRefreshGrid);
     }
-
 
     // Метод для обработки кликов по тайлам
     private onTileClick(event: TileClickEvent): void
-    {
+    { 
         // Используем TilesGroupSystem для поиска всех связанных тайлов, которые принадлежат к той же группе, 
         // что и кликнутый тайл
         const group = this.tilesGroupSystem.FindConnectedTilesGroup(event.row, event.col, event.tileGroup);
@@ -125,8 +131,11 @@ class GameManager extends cc.Component
         
         // Проверяем, есть ли еще возможные ходы после удаления тайлов
         if(!this.tilesGroupSystem.HasAnyMoves())
+        {
             cc.log("No moves");
+            EventManager.instance.emit(new RefreshGridEvent());
             // ЭМИТ ДЛЯ СОБЫТИЯ ПЕРЕМЕШИВАНИЯ ТАЙЛОВ
+        }
     }
 
     private onUpdateUI(event: UpdateUIEvent): void
@@ -138,6 +147,12 @@ class GameManager extends cc.Component
     private onTilesRemoved(event: TilesRemovedEvent): void
     {
         this.moveTiles.ApplyMove();
+    }
+
+    private onRefreshTiles(): void
+    {
+        this.refreshTilesSystem.RefreshGrid();
+        this.tilesGroupSystem.Init(this.gridGenerator);
     }
 
     // ВЫНЕСТИ В ОТДЕЛЬНЫЙ СКРИПТ ЧТОБЫ ОБЛЕГЧИТЬ МЕНЕДЖЕР ИГРЫ
@@ -167,12 +182,19 @@ class GameManager extends cc.Component
         cc.director.loadScene(cc.director.getScene().name);
     }
 
+    public DebugRefreshGrid(): void
+    {
+        //EventManager.instance.emit(new RefreshGridEvent());
+        this.onRefreshTiles();
+    }
+
     onDestroy(): void 
     {
         // Отписка от события
         EventManager.instance.off(TileClickEvent, this.boundOnTileClick);
         EventManager.instance.off(TilesRemovedEvent, this.boundOnTilesRemoved);
         EventManager.instance.off(UpdateUIEvent, this.boundOnUpdateUI);
+        EventManager.instance.off(RefreshGridEvent, this.boundOnRefreshGrid);
         
     }
 }

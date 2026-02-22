@@ -53,16 +53,12 @@ export class UpdateUIEvent extends BaseEvent
     }
 }
 
-// export class DeleteTilesGroupEvent extends BaseEvent
-// {
-//     public static readonly Type = "DeleteTilesGroupEvent";
-
-//     constructor(
-//         public readonly group: cc.Node[],
-//         public readonly groupSize: number,
-//         public readonly groupType: number
-//     )
-//     {
-//         super(DeleteTilesGroupEvent.Type);
-//     }
-// }
+export class RefreshGridEvent extends BaseEvent
+{
+    public static readonly Type = "RefreshGridEvent";
+    
+    constructor()
+    {
+        super(RefreshGridEvent.Type);
+    }
+}

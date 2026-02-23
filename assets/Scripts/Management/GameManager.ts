@@ -14,6 +14,7 @@ import { SuperTileSystem } from "../GameFeatures/SuperTileSystem";
 //import { STbomb } from "../GameFeatures/STbomb ";
 import { TileSystem } from "../TileProperties/TileSystem";
 import Bomb from "../GameFeatures/Bomb";
+import { RocketSystem } from "../GameFeatures/RocketSystem";
 
 // Менеджер игры, управляющий логикой игры и событиями
 
@@ -111,11 +112,17 @@ class GameManager extends cc.Component
             this.isAnimating = true;
 
             const bomb = clickedTile.getComponent(Bomb);
+            const rocket = clickedTile.getComponent(RocketSystem)
 
             if (bomb)
             {
                 bomb.init(this.gridGenerator.gridTiles);
                 bomb.explode(event.row, event.col);
+            }
+            else if(rocket)
+            {
+                rocket.init(this.gridGenerator.gridTiles);
+                rocket.explode(event.row, event.col);
             }
 
             this.scheduleOnce(() =>

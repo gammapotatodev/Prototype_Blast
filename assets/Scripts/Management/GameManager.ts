@@ -1,350 +1,270 @@
-import { EventManager } from "./EventManager";
-import { TileClickEvent, TilesRemovedEvent, UpdateUIEvent, RefreshGridEvent, GameOverEvent, GameResultType } from "./Events";
-import { TilesGroupSystem } from "../GridSystem/TilesGroupSystem";
-import { GridGenerator } from "../GridSystem/GenerateGridSystem";
-import { MoveTilesSystem } from "../GridSystem/MoveTilesSystem";
-import { GridSize } from "../GridSystem/GridProperties";
-import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
-import { UpdateUISystem } from "./UpdateUISystem";
-import { RemoveTilesSystem } from "./RemoveTilesSystem";
-import { RefreshGridSystem } from "./RefreshGridSystem";
-import { BoosterTeleport } from "../GameFeatures/BoosterTeleport";
 import { SuperTileSystem } from "../GameFeatures/SuperTileSystem";
+import { GridGenerator } from "../GridSystem/GenerateGridSystem";
+import { GridSize } from "../GridSystem/GridProperties";
+import { MoveTilesSystem } from "../GridSystem/MoveTilesSystem";
+import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
+import { TilesGroupSystem } from "../GridSystem/TilesGroupSystem";
 import { TileSystem } from "../TileProperties/TileSystem";
-import { BombSystem } from "../GameFeatures/BombSystem";
-import { RocketSystem } from "../GameFeatures/RocketSystem";
+import { BoosterSystem } from "./BoosterSystem";
+import { EventManager } from "./EventManager";
+import { GameOverEvent, GameResultType, RefreshGridEvent, TileClickEvent, TilesRemovedEvent, UpdateUIEvent } from "./Events";
+import { GameSateSystem } from "./GameStateSystem";
+import { MoveHandle } from "./MoveHandle";
+import { RefreshGridSystem } from "./RefreshGridSystem";
+import { RemoveTilesSystem } from "./RemoveTilesSystem";
+import { UpdateUISystem } from "./UpdateUISystem";
 
-// Менеджер игры, управляющий логикой игры и событиями
 
 @cc._decorator.ccclass
-class GameManager extends cc.Component
+export class GameManager extends cc.Component
 {
-    // Ссылка на ноду с GridGenerator
     @cc._decorator.property(cc.Node)
     private gridNode: cc.Node = null!;
 
-    // Ссылка на ноду c RandomTileSystem
     @cc._decorator.property(cc.Node)
     private randomTileSystemNode: cc.Node = null!;
 
-    // Ссылка на ноду с SuperTileSystem
     @cc._decorator.property(cc.Node)
     private superTileSystem: cc.Node = null!;
 
-    // Связанные методы для событий
-    private boundOnTileClick: (event: TileClickEvent) => void;
-    private boundOnTilesRemoved: (event: TilesRemovedEvent) => void;
-    private boundOnUpdateUI: (event: UpdateUIEvent) => void;
-    private boundOnRefreshGrid: () => void;
-
+    private gameState: GameSateSystem = null!;
+    private boosterManager: BoosterSystem = null!;
+    private moveHandler: MoveHandle = null!;
+    
     private gridGenerator: GridGenerator = null!;
     private gridSize: GridSize = null!;
     private randomTileSystem: RandomTileSystem = null!;
     private tilesRemoveSystem: RemoveTilesSystem = null!;
     private refreshTilesSystem: RefreshGridSystem = null!;
-    private moveTiles : MoveTilesSystem = null!;
+    private moveTiles: MoveTilesSystem = null!;
     private updateUISystem: UpdateUISystem = null!;
-    private activeBoosterTeleport: BoosterTeleport = null!;
-    private teleportFirstTile: cc.Node = null!;
     private superTile: SuperTileSystem = null!;
-    
-    private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
+    private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem();
 
-    private startMovesCount: number = 0;
-    private goalScore: number = 0;
-    private startBombCount: number = 0;
-    private startTeleportCount: number = 0;
-    private refreshesCount: number = 0;
-    private isAnimating: boolean = false;
-    private activeBoosterBomb: boolean = false;
+    private boundHandlers = {
+        onTileClick: null as any,
+        onTilesRemoved: null as any,
+        onUpdateUI: null as any,
+        onRefreshGrid: null as any
+    };
 
     onLoad(): void 
     {
-        this.updateUISystem = this.getComponent(UpdateUISystem)!;
-        
-        this.gridNode.active = true;
-        this.refreshesCount = 0;
+        this.initSystems();
+        this.initGameState();
+        this.initManagers();
+        this.subscribeToEvents();
+    }
 
+    private initSystems(): void {
+        this.updateUISystem = this.getComponent(UpdateUISystem)!;
+        this.gridNode.active = true;
+        
         this.gridGenerator = this.gridNode.getComponent(GridGenerator)!;
         this.gridSize = this.gridNode.getComponent(GridSize)!;
         
-        this.startMovesCount = this.updateUISystem.movesCount;
-        this.goalScore = this.updateUISystem.goalScore;
-        this.startBombCount = this.updateUISystem.BoosterBombCount;
-        this.startTeleportCount = this.updateUISystem.BoosterTeleportCount;
-        
-        this.tilesRemoveSystem = new RemoveTilesSystem(this.gridGenerator, this.updateUISystem, 0, this.startMovesCount);
-
         this.randomTileSystem = this.randomTileSystemNode.getComponent(RandomTileSystem)!;
         this.superTile = this.superTileSystem.getComponent(SuperTileSystem)!;
-        this.superTile.Init(this.gridGenerator);   
-
+        this.superTile.Init(this.gridGenerator);
+        
         this.tilesGroupSystem.Init(this.gridGenerator);
-        
         this.moveTiles = new MoveTilesSystem(this.gridGenerator, this.gridSize, this.randomTileSystem);
-        
         this.refreshTilesSystem = new RefreshGridSystem(this.gridGenerator, this.gridSize);
-
-        // Поддготовка связанных методов для событий
-        this.boundOnTileClick = this.onTileClick.bind(this);
-        this.boundOnTilesRemoved = this.onTilesRemoved.bind(this);
-        this.boundOnUpdateUI = this.onUpdateUI.bind(this);
-        this.boundOnRefreshGrid = this.onRefreshTiles.bind(this);
-        
-        // Подписываемся на события
-        EventManager.instance.on(TileClickEvent, this.boundOnTileClick);
-        EventManager.instance.on(TilesRemovedEvent, this.boundOnTilesRemoved);
-        EventManager.instance.on(UpdateUIEvent, this.boundOnUpdateUI);
-        EventManager.instance.on(RefreshGridEvent, this.boundOnRefreshGrid);
     }
 
-    // Метод для обработки кликов по тайлам
+    private initGameState(): void {
+        this.gameState = new GameSateSystem(
+            this.updateUISystem.goalScore,
+            this.updateUISystem.movesCount,
+            this.updateUISystem.BoosterBombCount,
+            this.updateUISystem.BoosterTeleportCount
+        );
+        
+        this.tilesRemoveSystem = new RemoveTilesSystem(
+            this.gridGenerator, 
+            this.updateUISystem, 
+            0, 
+            this.gameState.startMovesCount
+        );
+    }
+
+    private initManagers(): void {
+        this.boosterManager = new BoosterSystem(this.gameState, this.gridGenerator);
+        
+        const moveHandlerNode = new cc.Node();
+        moveHandlerNode.parent = this.node;
+        this.moveHandler = moveHandlerNode.addComponent(MoveHandle);
+        
+        this.moveHandler.init(
+            this.gameState,
+            this.gridGenerator,
+            this.tilesGroupSystem,
+            this.tilesRemoveSystem,
+            this.moveTiles,
+            this.superTile,
+            () => {
+                this.gameState.isAnimating = false;
+            },
+            () => {
+                this.emitUIUpdate();
+            }
+        );
+    }
+
+    private subscribeToEvents(): void {
+        this.boundHandlers.onTileClick = this.onTileClick.bind(this);
+        this.boundHandlers.onTilesRemoved = this.onTilesRemoved.bind(this);
+        this.boundHandlers.onUpdateUI = this.onUpdateUI.bind(this);
+        this.boundHandlers.onRefreshGrid = this.onRefreshTiles.bind(this);
+        
+        EventManager.instance.on(TileClickEvent, this.boundHandlers.onTileClick);
+        EventManager.instance.on(TilesRemovedEvent, this.boundHandlers.onTilesRemoved);
+        EventManager.instance.on(UpdateUIEvent, this.boundHandlers.onUpdateUI);
+        EventManager.instance.on(RefreshGridEvent, this.boundHandlers.onRefreshGrid);
+    }
+
     private onTileClick(event: TileClickEvent): void
     {
-        if(this.isAnimating)
-            return;
+        if(this.gameState.isAnimating) return;
 
         const clickedTile = this.gridGenerator.gridTiles[event.row][event.col];
         const tileComp = clickedTile.getComponent(TileSystem);
 
-        if (tileComp.isSuperTile)
-        {
-            this.isAnimating = true;
-
-            const bomb = clickedTile.getComponent(BombSystem);
-            const rocket = clickedTile.getComponent(RocketSystem)
-
-            if (bomb)
-            {
-                bomb.init(this.gridGenerator.gridTiles);
-                bomb.explode(event.row, event.col);
-            }
-            else if(rocket)
-            {
-                rocket.init(this.gridGenerator.gridTiles);
-                rocket.explode(event.row, event.col);
-            }
-
-            this.scheduleOnce(() =>
-            {
-                this.moveTiles.ApplyMove();
-                this.isAnimating = false;
-            }, 0.3);
-
+        if (tileComp.isSuperTile) {
+            this.handleSuperTileClick(event.row, event.col);
             return;
         }
 
-        if (this.activeBoosterTeleport && this.startTeleportCount > 0)
-        {
-            if (!this.teleportFirstTile)
-            {
-                // Выбираем первый тайл
-                this.teleportFirstTile = clickedTile;
-                return;
-            }
-            else
-            {
-                // Выбираем второй тайл и телепортируем
-                this.isAnimating = true;
+        if (this.handleBoosterClicks(event, clickedTile)) {
+            return;
+        }
 
-                this.activeBoosterTeleport.TeleportTiles(
-                    this.teleportFirstTile,
-                    clickedTile
-                );
+        this.handleRegularTileClick(event);
+    }
 
-                // Сброс состояния
-                this.teleportFirstTile = null;
-                this.activeBoosterTeleport = null;
+    private handleSuperTileClick(row: number, col: number): void {
+        this.gameState.isAnimating = true;
+        this.moveHandler.handleSuperTile(row, col);
+    }
 
-                // Обновляем группы после телепорта
+    private handleBoosterClicks(event: TileClickEvent, clickedTile: cc.Node): boolean {
+        if (this.boosterManager.handleBombClick(event.row, event.col, () => {
+            this.emitUIUpdate();
+        })) {
+            return true;
+        }
+
+        if (this.boosterManager.handleTeleportClick(clickedTile, (used) => {
+            if (used) {
                 this.tilesGroupSystem.Init(this.gridGenerator);
-
-                this.scheduleOnce(() =>
-                {
-                    this.isAnimating = false;
-                }, 0.2);
-
-                this.startTeleportCount--;
-                EventManager.instance.emit(new UpdateUIEvent(
-                    this.tilesRemoveSystem.Score, 
-                    this.tilesRemoveSystem.Moves, 
-                    this.startBombCount, 
-                    this.startTeleportCount)
-                );
-                return;
+                this.gameState.isAnimating = false;
+                this.emitUIUpdate();
             }
+        })) {
+            return true;
         }
 
-        if (this.activeBoosterBomb && this.startBombCount > 0) 
-        {
-            this.isAnimating = true;
+        return false;
+    }
 
-            const bombNode = new cc.Node();
-            const bomb = bombNode.addComponent(BombSystem);
-
-            bomb.radius = 1;
-            bomb.init(this.gridGenerator.gridTiles);
-            bomb.explode(event.row, event.col);
-
-            bombNode.destroy();
-
-            this.activeBoosterBomb = false;
-            this.startBombCount--;
-
-            EventManager.instance.emit(
-                new UpdateUIEvent(
-                    this.tilesRemoveSystem.Score,
-                    this.tilesRemoveSystem.Moves,
-                    this.startBombCount,
-                    this.startTeleportCount
-                )
-            );
-
-            return;
-        }
-        // Используем TilesGroupSystem для поиска всех связанных тайлов, которые принадлежат к той же группе, 
-        // что и кликнутый тайл
-        const group = this.tilesGroupSystem.FindConnectedTilesGroup(event.row, event.col, event.tileGroup);
+    private handleRegularTileClick(event: TileClickEvent): void {
+        const group = this.tilesGroupSystem.FindConnectedTilesGroup(
+            event.row, event.col, event.tileGroup
+        );
         
-        // Если найдено 2 или более связанных тайлов, удаляем их
-        if(group.length >= 5)
-        {
-            this.isAnimating = true;
-
-            const clickedTile = this.gridGenerator.gridTiles[event.row][event.col];
-
-            this.tilesRemoveSystem.RemoveTilesWithoutScore(group);
-
-            this.superTile.SpawnSuperTile(clickedTile);
-
-            this.tilesGroupSystem.Init(this.gridGenerator);
-
-            this.scheduleOnce(() =>
-            {
-                this.moveTiles.ApplyMove();
-                this.isAnimating = false;
-            }, 0.3);
-
-            return;
-        }
-        else if(group.length >= 2)
-        {
-            EventManager.instance.emit(
-                new TilesRemovedEvent(group, group.length)
-            );
-        }
+        this.moveHandler.handleRegularTile(group, event.row, event.col);
         
-        // Проверяем, есть ли еще возможные ходы после удаления тайлов
-        if(!this.tilesGroupSystem.HasAnyMoves())
-        {
-            this.refreshesCount++;
+        if(!this.tilesGroupSystem.HasAnyMoves()) {
+            this.gameState.refreshesCount++;
             EventManager.instance.emit(new RefreshGridEvent());
         }
     }
 
-    // Метод для обработки события обновления UI
+    private onTilesRemoved(event: TilesRemovedEvent): void
+    {
+        this.gameState.isAnimating = true;
+        this.tilesRemoveSystem.RemoveTiles(event.removedTiles);
+        this.emitUIUpdate();
+        this.checkGameOver();
+
+        this.scheduleOnce(() => {
+            this.moveTiles.ApplyMove();
+            this.gameState.isAnimating = false;
+        }, 0.3);
+    }
+
+    private onRefreshTiles(): void
+    {
+        if(this.gameState.refreshesCount > 3) {
+            this.emitGameOver(GameResultType.Lose);
+            return;
+        }
+        
+        this.gameState.isAnimating = true;
+        this.refreshTilesSystem.RefreshGrid();
+        this.tilesGroupSystem.Init(this.gridGenerator);
+        
+        this.scheduleOnce(() => {
+            this.gameState.isAnimating = false;
+        }, 0.5);
+    }
+
     private onUpdateUI(event: UpdateUIEvent): void
     {
         this.updateUISystem.UpdateUI(event.score, event.moves, event.bomb, event.teleport);
     }
 
-    // Метод для обработки события удаления тайлов
-    private onTilesRemoved(event: TilesRemovedEvent): void
-    {
-        this.isAnimating = true;
-        this.tilesRemoveSystem.RemoveTiles(event.removedTiles);
+    private emitUIUpdate(): void {
         EventManager.instance.emit(new UpdateUIEvent(
-            this.tilesRemoveSystem.Score, 
-            this.tilesRemoveSystem.Moves, 
-            this.startBombCount, 
-            this.startTeleportCount)
-        );
-        this.CheckGameOver(
             this.tilesRemoveSystem.Score,
-            this.tilesRemoveSystem.Moves
-        );
-
-        this.scheduleOnce(() =>
-        {
-            this.moveTiles.ApplyMove();
-            this.isAnimating = false;
-        }, 0.3);
+            this.tilesRemoveSystem.Moves,
+            this.gameState.bombCount,
+            this.gameState.teleportCount
+        ));
     }
 
-    // Метод для обработки события перемешивания сетки
-    private onRefreshTiles(): void
-    {
-        if(this.refreshesCount > 3)
-        {
-            EventManager.instance.emit(new GameOverEvent(GameResultType.Lose, this.tilesRemoveSystem.Score, this.goalScore));
-            return;
-        }
-        this.isAnimating = true;
-        this.refreshTilesSystem.RefreshGrid();
-        this.tilesGroupSystem.Init(this.gridGenerator);
-        this.scheduleOnce(() =>
-        {
-            this.isAnimating = false;
-        }, 0.5);
-    }
-
-    // Метод проверки конца игры
-    private CheckGameOver(score: number, moves: number): void
-    {
-        if(score >= this.goalScore)
-        {
-            EventManager.instance.emit(new GameOverEvent(GameResultType.Win, score, this.goalScore));
-            this.gridNode.active = false;
-        }
-        else if(moves <= 0)
-        {
-            EventManager.instance.emit(new GameOverEvent(GameResultType.Lose, score, this.goalScore));
-            this.gridNode.active = false;
+    private checkGameOver(): void {
+        if(this.tilesRemoveSystem.Score >= this.gameState.goalScore) {
+            this.emitGameOver(GameResultType.Win);
+        } else if(this.tilesRemoveSystem.Moves <= 0) {
+            this.emitGameOver(GameResultType.Lose);
         }
     }
 
-    // Кнопочка на ResultScreen
-    private RestartGame(): void
-    {
+    private emitGameOver(result: GameResultType): void {
+        EventManager.instance.emit(new GameOverEvent(
+            result, 
+            this.tilesRemoveSystem.Score, 
+            this.gameState.goalScore
+        ));
+        this.gridNode.active = false;
+    }
+
+    public ActivateBomb(): void {
+        this.boosterManager.activateBomb();
+    }
+
+    public ActivateTeleport(): void {
+        this.boosterManager.activateTeleport();
+    }
+
+    public DebugRefreshGrid(): void {
+        if(this.gameState.refreshesCount < 3) {
+            this.gameState.refreshesCount++;
+            EventManager.instance.emit(new RefreshGridEvent());
+        } else {
+            this.emitGameOver(GameResultType.Lose);
+        }
+    }
+
+    public RestartGame(): void {
         cc.director.loadScene(cc.director.getScene().name);
     }
 
-    // Кнопочка на Debug.fire для теста перемешивания сетки
-    public DebugRefreshGrid(): void
-    {
-        if(this.refreshesCount < 3)
-        {
-            this.refreshesCount++;
-            EventManager.instance.emit(new RefreshGridEvent());
-        }
-        else if(this.refreshesCount >= 3)
-            EventManager.instance.emit(new GameOverEvent(GameResultType.Lose, this.tilesRemoveSystem.Score, this.goalScore));
-    }
-    
-    public ActivateBomb(): void 
-    {
-        if (this.activeBoosterBomb) return;
-        this.activeBoosterBomb = true;
-    }
-
-    public ActivateTeleport(): void
-    {
-        if (this.activeBoosterTeleport) return;
-
-        this.activeBoosterTeleport = new BoosterTeleport(
-            this.gridGenerator,
-        );
-
-        this.teleportFirstTile = null;
-    }
-
-    onDestroy(): void 
-    {
-        // Отписки от событий
-        EventManager.instance.off(TileClickEvent, this.boundOnTileClick);
-        EventManager.instance.off(TilesRemovedEvent, this.boundOnTilesRemoved);
-        EventManager.instance.off(UpdateUIEvent, this.boundOnUpdateUI);
-        EventManager.instance.off(RefreshGridEvent, this.boundOnRefreshGrid);
-        
+    onDestroy(): void {
+        EventManager.instance.off(TileClickEvent, this.boundHandlers.onTileClick);
+        EventManager.instance.off(TilesRemovedEvent, this.boundHandlers.onTilesRemoved);
+        EventManager.instance.off(UpdateUIEvent, this.boundHandlers.onUpdateUI);
+        EventManager.instance.off(RefreshGridEvent, this.boundHandlers.onRefreshGrid);
     }
 }

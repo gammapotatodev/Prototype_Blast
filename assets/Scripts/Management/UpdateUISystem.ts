@@ -1,4 +1,5 @@
 
+// Система обновления UI
 
 @cc._decorator.ccclass
 export class UpdateUISystem extends cc.Component

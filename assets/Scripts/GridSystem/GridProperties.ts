@@ -34,7 +34,6 @@ export class GridSize extends cc.Component
 // Класс, отвечающий за расчет параметров для дальнейшего построения сетки
 // В метод CalculateGridProperties передаётся ссылка на объект GridData, и 
 // происходит расчёт возвращаемых параметров
-//@cc._decorator.ccclass
 export class CalculationProperties
 {
     public CalculateGridProperties(grid: GridData)

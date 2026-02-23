@@ -1,13 +1,16 @@
 import { EventManager } from "../Management/EventManager";
 import { TilesRemovedEvent } from "../Management/Events";
 
+// Класс, описывающий поведение супер-тайла: ракеты
 
 @cc._decorator.ccclass
 export class RocketSystem extends cc.Component 
 {
+    // Флаг для ракеты, которая сжигает строку
     @cc._decorator.property
     rocketRow : boolean = false;
 
+    // Флаг для ракеты, которая сжигает колонку
     @cc._decorator.property
     rocketCol : boolean = false;
 
@@ -18,6 +21,7 @@ export class RocketSystem extends cc.Component
         this.grid = grid;
     }
 
+    // Активация ракеты в указанной позиции
     public explode(row: number, col: number) 
     {
         if (!this.grid || this.grid.length === 0) return;

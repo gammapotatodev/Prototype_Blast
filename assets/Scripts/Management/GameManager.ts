@@ -8,12 +8,10 @@ import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
 import { UpdateUISystem } from "./UpdateUISystem";
 import { RemoveTilesSystem } from "./RemoveTilesSystem";
 import { RefreshGridSystem } from "./RefreshGridSystem";
-//import { BoosterBomb } from "../GameFeatures/BoosterBomb";
 import { BoosterTeleport } from "../GameFeatures/BoosterTeleport";
 import { SuperTileSystem } from "../GameFeatures/SuperTileSystem";
-//import { STbomb } from "../GameFeatures/STbomb ";
 import { TileSystem } from "../TileProperties/TileSystem";
-import Bomb from "../GameFeatures/Bomb";
+import { BombSystem } from "../GameFeatures/BombSystem";
 import { RocketSystem } from "../GameFeatures/RocketSystem";
 
 // Менеджер игры, управляющий логикой игры и событиями
@@ -25,9 +23,11 @@ class GameManager extends cc.Component
     @cc._decorator.property(cc.Node)
     private gridNode: cc.Node = null!;
 
+    // Ссылка на ноду c RandomTileSystem
     @cc._decorator.property(cc.Node)
     private randomTileSystemNode: cc.Node = null!;
 
+    // Ссылка на ноду с SuperTileSystem
     @cc._decorator.property(cc.Node)
     private superTileSystem: cc.Node = null!;
 
@@ -44,7 +44,6 @@ class GameManager extends cc.Component
     private refreshTilesSystem: RefreshGridSystem = null!;
     private moveTiles : MoveTilesSystem = null!;
     private updateUISystem: UpdateUISystem = null!;
-    //private activeBoosterBomb: BoosterBomb = null!;
     private activeBoosterTeleport: BoosterTeleport = null!;
     private teleportFirstTile: cc.Node = null!;
     private superTile: SuperTileSystem = null!;
@@ -68,6 +67,7 @@ class GameManager extends cc.Component
         this.gridSize = this.gridNode.getComponent(GridSize)!;
         
         this.updateUISystem = this.getComponent(UpdateUISystem)!;
+        
         this.startMovesCount = this.updateUISystem.movesCount;
         this.goalScore = this.updateUISystem.goalScore;
         this.startBombCount = this.updateUISystem.BoosterBombCount;
@@ -111,7 +111,7 @@ class GameManager extends cc.Component
         {
             this.isAnimating = true;
 
-            const bomb = clickedTile.getComponent(Bomb);
+            const bomb = clickedTile.getComponent(BombSystem);
             const rocket = clickedTile.getComponent(RocketSystem)
 
             if (bomb)
@@ -180,7 +180,7 @@ class GameManager extends cc.Component
             this.isAnimating = true;
 
             const bombNode = new cc.Node();
-            const bomb = bombNode.addComponent(Bomb);
+            const bomb = bombNode.addComponent(BombSystem);
 
             bomb.radius = 1;
             bomb.init(this.gridGenerator.gridTiles);
@@ -217,12 +217,6 @@ class GameManager extends cc.Component
 
             this.superTile.SpawnSuperTile(clickedTile);
 
-            // удалить без очков
-            //this.tilesRemoveSystem.RemoveTilesWithoutScore(group);
-
-            // создать супер тайл
-            //this.superTile.SpawnSuperTile(event.row, event.col);
-
             this.tilesGroupSystem.Init(this.gridGenerator);
 
             this.scheduleOnce(() =>
@@ -248,6 +242,7 @@ class GameManager extends cc.Component
         }
     }
 
+    // Метод для обработки события обновления UI
     private onUpdateUI(event: UpdateUIEvent): void
     {
         this.updateUISystem.UpdateUI(event.score, event.moves, event.bomb, event.teleport);
@@ -276,6 +271,7 @@ class GameManager extends cc.Component
         }, 0.3);
     }
 
+    // Метод для обработки события перемешивания сетки
     private onRefreshTiles(): void
     {
         if(this.refreshesCount > 3)
@@ -292,6 +288,7 @@ class GameManager extends cc.Component
         }, 0.5);
     }
 
+    // Метод проверки конца игры
     private CheckGameOver(score: number, moves: number): void
     {
         if(score >= this.goalScore)
@@ -306,12 +303,13 @@ class GameManager extends cc.Component
         }
     }
 
-    // ВЫНЕСТИ В ОТДЕЛЬНЫЙ СКРИПТ ЧТОБЫ ОБЛЕГЧИТЬ МЕНЕДЖЕР ИГРЫ
+    // Кнопочка на ResultScreen
     private RestartGame(): void
     {
         cc.director.loadScene(cc.director.getScene().name);
     }
 
+    // Кнопочка на Debug.fire для теста перемешивания сетки
     public DebugRefreshGrid(): void
     {
         if(this.refreshesCount < 3)
@@ -335,7 +333,6 @@ class GameManager extends cc.Component
 
         this.activeBoosterTeleport = new BoosterTeleport(
             this.gridGenerator,
-            this.gridSize
         );
 
         this.teleportFirstTile = null;

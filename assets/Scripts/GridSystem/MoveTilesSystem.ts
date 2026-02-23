@@ -1,17 +1,13 @@
 import { GridGenerator } from "./GenerateGridSystem";
-//import {Tile} from "./TilesGroupSystem"
 import { GridSize, CalculationProperties } from "./GridProperties";
 import { TileSystem } from "../TileProperties/TileSystem";
 import { RandomTileSystem } from "./RandomTileSystem";
 import { ClickHandle } from "../Management/ClickHandle";
 
-//@cc._decorator.ccclass
+// Класс, описывающий смещение тайлов вниз и добавления новых
+
 export class MoveTilesSystem 
 {
-    // @cc._decorator.property(RandomTileSystem)
-    // private randomTileSystemComponent: RandomTileSystem = null!;
-
-    private tileSystemComponent: TileSystem = null!;
 
     private grid: GridGenerator;
     private gridSize: GridSize;
@@ -26,6 +22,7 @@ export class MoveTilesSystem
         this.calcProps = new CalculationProperties();
     }
 
+    // Метод для смещения тайлов ниже
     public ApplyMove(): boolean
     {
         let anyTileMoved = false;
@@ -50,8 +47,6 @@ export class MoveTilesSystem
                         this.grid.gridTiles[targetRow][c] = tile;
                         this.grid.gridTiles[r][c] = null;
 
-                        // (tile as Tile).row = targetRow;
-                        // (tile as Tile).col = c;
                         const tileComp = tile.getComponent(TileSystem);
                         tileComp.row = targetRow;
                         tileComp.col = c;
@@ -61,7 +56,7 @@ export class MoveTilesSystem
 
                         tile.setPosition(newX, newY);
 
-                        cc.log(`Tile moved DOWN from [${r}] to [${targetRow}]`);
+                        //cc.log(`Tile moved DOWN from [${r}] to [${targetRow}]`);
                         anyTileMoved = true;
                     }
 
@@ -75,6 +70,7 @@ export class MoveTilesSystem
         return anyTileMoved;
     }
 
+    // Метод добавления новых тайлов
     private AddNewTiles(): void
     {
         const rows = this.grid.gridTiles.length;
@@ -98,7 +94,7 @@ export class MoveTilesSystem
                     const posX = startX + c * gridData.cellSize;
                     const posY = startY + r * gridData.cellSize;
 
-                    // Для появления тайла выше для анимации
+                    // Для появления тайла выше, для анимации
                     const spawnOffset = gridData.cellSize * 2;
 
                     tile.setPosition(posX, posY + spawnOffset);
@@ -110,7 +106,7 @@ export class MoveTilesSystem
                     tileComp.col = c;
                     tileComp.groupIndex = index;
 
-                    // добавляем скрипт для обработки кликов на тайлах (мб потом удалю и просто на префаб накину)
+                    // добавляем скрипт для обработки кликов на тайлах
                     const clickable = tile.addComponent(ClickHandle);
                     
                     // Инициализируем ClickHandle, передавая ссылку на GridGenerator для доступа к матрице тайлов 

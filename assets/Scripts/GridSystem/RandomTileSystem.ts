@@ -1,14 +1,11 @@
 
+// Система получения случайного тайла из доступных
+
 @cc._decorator.ccclass
 export class RandomTileSystem extends cc.Component
 {
     @cc._decorator.property(cc.Prefab)
     private tilePrefabs: cc.Prefab[] = [];
-
-    // constructor(tilePrefabs: cc.Prefab[])
-    // {
-    //     this.tilePrefabs = tilePrefabs;
-    // }
     
     public getRandomTile(): {prefab: cc.Prefab, index: number}
     {

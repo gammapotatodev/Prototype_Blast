@@ -3,8 +3,9 @@ import { EventManager } from "./EventManager";
 import { TileClickEvent } from "./Events";
 import { TileSystem } from "../TileProperties/TileSystem";
 
-// Класс для обработки кликов на тайлах. При клике на тайл, получает его координаты и индекс группы,
-// и отправляет событие TileClickEvent с этими данными для дальнейшей обработки в других классах
+// Система обработки кликов на тайлах. При клике на тайл, получает его координаты и индекс группы,
+// и отправляет событие TileClickEvent с этими данными
+
 @cc._decorator.ccclass
 export class ClickHandle extends cc.Component 
 {
@@ -41,7 +42,6 @@ export class ClickHandle extends cc.Component
 
     }
 
-    // При уничтожении ноды отписываемся от события клика, чтобы избежать утечек памяти
     onDestroy() 
     {
         this.node.off(cc.Node.EventType.MOUSE_DOWN, this.OnClick, this);

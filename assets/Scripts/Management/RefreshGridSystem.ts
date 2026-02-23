@@ -2,8 +2,8 @@ import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { GridSize } from "../GridSystem/GridProperties";
 import { TileSystem } from "../TileProperties/TileSystem";
 
+// Система перемешивания сетки
 
-@cc._decorator.ccclass
 export class RefreshGridSystem
 {
     private gridGenerator: GridGenerator;
@@ -63,7 +63,6 @@ export class RefreshGridSystem
                 
                 tileComp.row = row;
                 tileComp.col = col;
-                //tileComp.groupIndex = index; // сохраняем группу, так как она не меняется при перемешивании
                  
                 index++;
             }

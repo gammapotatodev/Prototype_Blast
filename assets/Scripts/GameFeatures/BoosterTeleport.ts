@@ -1,23 +1,20 @@
 import { GridGenerator } from "../GridSystem/GenerateGridSystem";
-import { GridSize } from "../GridSystem/GridProperties";
 import { TileSystem } from "../TileProperties/TileSystem";
 
+// Класс, описывающий поведение бустера: телепорт
 
-@cc._decorator.ccclass
 export class BoosterTeleport
 {
     private gridGenerator: GridGenerator;
-    private gridSize: GridSize;
 
     constructor(
         gridGenerator: GridGenerator,
-        gridSize: GridSize,
     )
     {
         this.gridGenerator = gridGenerator;
-        this.gridSize = gridSize;
     }
 
+    // Телепортация двух тайлов
     public TeleportTiles(firstTile: cc.Node, secondTile: cc.Node): void
     {
         if (!firstTile || !secondTile) return;
@@ -51,7 +48,7 @@ export class BoosterTeleport
         gridTiles[firstRow][firstCol] = secondTile;
         gridTiles[secondRow][secondCol] = firstTile;
 
-        // Меняем row/col в компонентах
+        // Меняем row и col в компонентах
         firstComp.row = secondRow;
         firstComp.col = secondCol;
 

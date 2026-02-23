@@ -20,9 +20,6 @@ export class GridGenerator extends cc.Component {
     // Экземпляр класса CalculationProperties для доступа к методу расчёта параметров сетки
     private calculation: CalculationProperties = new CalculationProperties();
 
-    // Экземпляр класса RandomTileSystem для доступа к методу получения случайного тайла
-    //private randomTileSystem!: RandomTileSystem;
-
     // Матрица для хранения ссылок на созданные тайлы для дальнейшего использования в ClickHandle
     public gridTiles: cc.Node[][] = [];
 

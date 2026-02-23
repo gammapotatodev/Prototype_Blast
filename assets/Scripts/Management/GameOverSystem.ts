@@ -1,6 +1,7 @@
 import { EventManager } from "./EventManager";
 import { GameOverEvent, GameResultType } from "./Events";
 
+// Система отображения экрана завершения игры
 
 @cc._decorator.ccclass
 export class GameOverSystem extends cc.Component
@@ -24,7 +25,6 @@ export class GameOverSystem extends cc.Component
         this.resultScreen.active = false;
         this.WinScoreLabel.node.active = false;
         this.loseScoreLabel.node.active = false;
-        //this.gridHolderNode.active = true;
 
         this.boundOnGameOver = this.onGameOver.bind(this);
         
@@ -47,7 +47,6 @@ export class GameOverSystem extends cc.Component
                 break;
         }
         this.resultScreen.active = true;
-        //this.gridHolderNode.active = false;
     }
 
     protected onDestroy(): void {

@@ -1,9 +1,8 @@
 import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { ClickHandle } from "../Management/ClickHandle";
 import { TileSystem } from "../TileProperties/TileSystem";
-// import Bomb from "./Bomb";
-// import { STbomb } from "./STbomb ";
 
+// Класс отвечающий за спавн супер-тайла
 
 @cc._decorator.ccclass
 export class SuperTileSystem extends cc.Component 
@@ -19,6 +18,7 @@ export class SuperTileSystem extends cc.Component
         this.gridGenerator = gridGenerator;
     }
 
+    // Создание супер-тайла
     public SpawnSuperTile(oldTile: cc.Node): cc.Node
     {
         const randomIndex = Math.floor(Math.random() * this.superTilesPrefab.length);
@@ -38,10 +38,6 @@ export class SuperTileSystem extends cc.Component
         tileComp.col = tileCompOld.col;
         tileComp.groupIndex = -1;
         tileComp.isSuperTile = true;
-
-        // const bombComp = newTile.getComponent(Bomb);
-        // if (bombComp)
-        //     bombComp.init(this.gridGenerator.gridTiles);
 
         const clickable = newTile.addComponent(ClickHandle);
         clickable.Init(this.gridGenerator);

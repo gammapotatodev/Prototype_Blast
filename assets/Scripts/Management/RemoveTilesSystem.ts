@@ -2,7 +2,8 @@ import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { TileSystem } from "../TileProperties/TileSystem";
 import { UpdateUISystem } from "./UpdateUISystem";
 
-@cc._decorator.ccclass
+// Система удаления тайлов
+
 export class RemoveTilesSystem
 {
     private gridGenerator: GridGenerator;
@@ -54,8 +55,6 @@ export class RemoveTilesSystem
             }
         }
         this.currentMoves--;
-        //const gainedScore = this.updateUISystem.ScoreMultiplier * tiles.length;
-        //this.currentScore += gainedScore;
     }
 
     public get Score(): number

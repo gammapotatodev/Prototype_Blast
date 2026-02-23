@@ -4,7 +4,6 @@ export enum GameResultType
     Lose
 }
 
-
 // Базовый класс для всех событий. Содержит только тип события, который используется для 
 // идентификации события при его запуске и обработке
 export class BaseEvent
@@ -15,11 +14,8 @@ export class BaseEvent
 // Событие клика по тайлу. Содержит координаты тайла (row, col), ссылку на ноду тайла и индекс группы тайла
 export class TileClickEvent extends BaseEvent
 {
-    // Статическое поле для хранения типа события
     public static readonly Type = "TileClickEvent";
 
-    // Конструктор принимает координаты тайла, ссылку на ноду и индекс группы, и вызывает конструктор 
-    // базового класса с типом события
     constructor(
         public readonly row: number,
         public readonly col: number,
@@ -36,7 +32,6 @@ export class TilesRemovedEvent extends BaseEvent
 {
     public static readonly Type = "TilesRemovedEvent";
 
-    // Конструктор принимает массив удалённых нод тайлов и размер группы, и вызывает конструктор
     constructor(
         public readonly removedTiles: cc.Node[],
         public readonly groupSize: number
@@ -45,7 +40,8 @@ export class TilesRemovedEvent extends BaseEvent
         super(TilesRemovedEvent.Type);
     }
 }
- 
+
+// Событие обновления интерфейса
 export class UpdateUIEvent extends BaseEvent
 {
     public static readonly Type = "UpdateUIEvent";
@@ -61,6 +57,7 @@ export class UpdateUIEvent extends BaseEvent
     }
 }
 
+// Событие перемешивания сетки
 export class RefreshGridEvent extends BaseEvent
 {
     public static readonly Type = "RefreshGridEvent";
@@ -71,6 +68,7 @@ export class RefreshGridEvent extends BaseEvent
     }
 }
 
+// Событие окончания игры
 export class GameOverEvent extends BaseEvent
 {
     public static readonly Type = "GameOverEvent";
@@ -85,16 +83,3 @@ export class GameOverEvent extends BaseEvent
     }
 
 }
-
-// export class SuperTileEvent extends BaseEvent
-// {
-//     public static readonly Type = "SuperTileEvent"
-
-//     constructor(
-//         public readonly row: number,
-//         public readonly col: number
-//     )
-//     {
-//         super(SuperTileEvent.Type)
-//     }
-// }

@@ -1,3 +1,6 @@
+
+// Компонент с данными тайла
+
 @cc._decorator.ccclass
 export class TileSystem extends cc.Component 
 {

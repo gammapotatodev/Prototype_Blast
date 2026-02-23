@@ -47,4 +47,5 @@ export class UpdateUISystem extends cc.Component
         this.bombLabel.string = bomb.toString();
         this.teleportLabel.string = teleport.toString();
     }
+
 }

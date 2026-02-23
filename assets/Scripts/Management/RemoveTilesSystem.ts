@@ -54,7 +54,6 @@ export class RemoveTilesSystem
                 tile.destroy();
             }
         }
-        this.currentMoves--;
     }
 
     public get Score(): number

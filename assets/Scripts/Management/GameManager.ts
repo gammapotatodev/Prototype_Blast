@@ -60,13 +60,13 @@ class GameManager extends cc.Component
 
     onLoad(): void 
     {
+        this.updateUISystem = this.getComponent(UpdateUISystem)!;
+        
         this.gridNode.active = true;
         this.refreshesCount = 0;
 
         this.gridGenerator = this.gridNode.getComponent(GridGenerator)!;
         this.gridSize = this.gridNode.getComponent(GridSize)!;
-        
-        this.updateUISystem = this.getComponent(UpdateUISystem)!;
         
         this.startMovesCount = this.updateUISystem.movesCount;
         this.goalScore = this.updateUISystem.goalScore;

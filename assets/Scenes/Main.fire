@@ -2124,8 +2124,8 @@
     "teleportLabel": {
       "__id__": 49
     },
-    "goalScore": 1000,
-    "movesCount": 15,
+    "goalScore": 1700,
+    "movesCount": 20,
     "ScoreMultiplier": 10,
     "BoosterBombCount": 5,
     "BoosterTeleportCount": 5,

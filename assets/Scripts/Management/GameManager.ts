@@ -44,6 +44,8 @@ class GameManager extends cc.Component
 
     private startMovesCount: number = 0;
     private goalScore: number = 0;
+    private startBombCount: number = 0;
+    private startTeleportCount: number = 0;
     private refreshesCount: number = 0;
     private isAnimating: boolean = false;
 
@@ -58,6 +60,8 @@ class GameManager extends cc.Component
         this.updateUISystem = this.getComponent(UpdateUISystem)!;
         this.startMovesCount = this.updateUISystem.movesCount;
         this.goalScore = this.updateUISystem.goalScore;
+        this.startBombCount = this.updateUISystem.BoosterBombCount;
+        this.startTeleportCount = this.updateUISystem.BoosterTeleportCount;
         
         this.tilesRemoveSystem = new RemoveTilesSystem(this.gridGenerator, this.updateUISystem, 0, this.startMovesCount);
 
@@ -91,7 +95,7 @@ class GameManager extends cc.Component
         const clickedTile = this.gridGenerator.gridTiles[event.row][event.col];
 
         // ===== TELEPORT BOOSTER =====
-        if (this.activeBoosterTeleport)
+        if (this.activeBoosterTeleport && this.startTeleportCount > 0)
         {
             if (!this.teleportFirstTile)
             {
@@ -121,15 +125,29 @@ class GameManager extends cc.Component
                     this.isAnimating = false;
                 }, 0.2);
 
+                this.startTeleportCount--;
+                EventManager.instance.emit(new UpdateUIEvent(
+                    this.tilesRemoveSystem.Score, 
+                    this.tilesRemoveSystem.Moves, 
+                    this.startBombCount, 
+                    this.startTeleportCount)
+                );
                 return;
             }
         }
 
-        if (this.activeBoosterBomb) 
+        if (this.activeBoosterBomb && this.startBombCount > 0) 
         {
             this.isAnimating = true;
             this.activeBoosterBomb.explode(event.row, event.col);   
             this.activeBoosterBomb = null;
+            this.startBombCount--;
+            EventManager.instance.emit(new UpdateUIEvent(
+                this.tilesRemoveSystem.Score, 
+                this.tilesRemoveSystem.Moves, 
+                this.startBombCount, 
+                this.startTeleportCount)
+            );
             return;
         }
         // Используем TilesGroupSystem для поиска всех связанных тайлов, которые принадлежат к той же группе, 
@@ -154,7 +172,7 @@ class GameManager extends cc.Component
 
     private onUpdateUI(event: UpdateUIEvent): void
     {
-        this.updateUISystem.UpdateUI(event.score, event.moves);
+        this.updateUISystem.UpdateUI(event.score, event.moves, event.bomb, event.teleport);
     }
 
     // Метод для обработки события удаления тайлов

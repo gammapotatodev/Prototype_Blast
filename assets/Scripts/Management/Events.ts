@@ -52,7 +52,9 @@ export class UpdateUIEvent extends BaseEvent
 
     constructor(
         public readonly score: number,
-        public readonly moves: number
+        public readonly moves: number,
+        public readonly bomb: number,
+        public readonly teleport: number
     )
     {
         super(UpdateUIEvent.Type);

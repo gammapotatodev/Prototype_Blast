@@ -8,8 +8,12 @@ import { RandomTileSystem } from "../GridSystem/RandomTileSystem";
 import { UpdateUISystem } from "./UpdateUISystem";
 import { RemoveTilesSystem } from "./RemoveTilesSystem";
 import { RefreshGridSystem } from "./RefreshGridSystem";
-import { BoosterBomb } from "../GameFeatures/BoosterBomb";
+//import { BoosterBomb } from "../GameFeatures/BoosterBomb";
 import { BoosterTeleport } from "../GameFeatures/BoosterTeleport";
+import { SuperTileSystem } from "../GameFeatures/SuperTileSystem";
+//import { STbomb } from "../GameFeatures/STbomb ";
+import { TileSystem } from "../TileProperties/TileSystem";
+import Bomb from "../GameFeatures/Bomb";
 
 // Менеджер игры, управляющий логикой игры и событиями
 
@@ -22,6 +26,9 @@ class GameManager extends cc.Component
 
     @cc._decorator.property(cc.Node)
     private randomTileSystemNode: cc.Node = null!;
+
+    @cc._decorator.property(cc.Node)
+    private superTileSystem: cc.Node = null!;
 
     // Связанные методы для событий
     private boundOnTileClick: (event: TileClickEvent) => void;
@@ -36,9 +43,10 @@ class GameManager extends cc.Component
     private refreshTilesSystem: RefreshGridSystem = null!;
     private moveTiles : MoveTilesSystem = null!;
     private updateUISystem: UpdateUISystem = null!;
-    private activeBoosterBomb: BoosterBomb = null!;
+    //private activeBoosterBomb: BoosterBomb = null!;
     private activeBoosterTeleport: BoosterTeleport = null!;
     private teleportFirstTile: cc.Node = null!;
+    private superTile: SuperTileSystem = null!;
     
     private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
 
@@ -48,6 +56,7 @@ class GameManager extends cc.Component
     private startTeleportCount: number = 0;
     private refreshesCount: number = 0;
     private isAnimating: boolean = false;
+    private activeBoosterBomb: boolean = false;
 
     onLoad(): void 
     {
@@ -66,6 +75,8 @@ class GameManager extends cc.Component
         this.tilesRemoveSystem = new RemoveTilesSystem(this.gridGenerator, this.updateUISystem, 0, this.startMovesCount);
 
         this.randomTileSystem = this.randomTileSystemNode.getComponent(RandomTileSystem)!;
+        this.superTile = this.superTileSystem.getComponent(SuperTileSystem)!;
+        this.superTile.Init(this.gridGenerator);   
 
         this.tilesGroupSystem.Init(this.gridGenerator);
         
@@ -93,6 +104,28 @@ class GameManager extends cc.Component
             return;
 
         const clickedTile = this.gridGenerator.gridTiles[event.row][event.col];
+        const tileComp = clickedTile.getComponent(TileSystem);
+
+        if (tileComp.isSuperTile)
+        {
+            this.isAnimating = true;
+
+            const bomb = clickedTile.getComponent(Bomb);
+
+            if (bomb)
+            {
+                bomb.init(this.gridGenerator.gridTiles);
+                bomb.explode(event.row, event.col);
+            }
+
+            this.scheduleOnce(() =>
+            {
+                this.moveTiles.ApplyMove();
+                this.isAnimating = false;
+            }, 0.3);
+
+            return;
+        }
 
         if (this.activeBoosterTeleport && this.startTeleportCount > 0)
         {
@@ -138,15 +171,28 @@ class GameManager extends cc.Component
         if (this.activeBoosterBomb && this.startBombCount > 0) 
         {
             this.isAnimating = true;
-            this.activeBoosterBomb.explode(event.row, event.col);   
-            this.activeBoosterBomb = null;
+
+            const bombNode = new cc.Node();
+            const bomb = bombNode.addComponent(Bomb);
+
+            bomb.radius = 1;
+            bomb.init(this.gridGenerator.gridTiles);
+            bomb.explode(event.row, event.col);
+
+            bombNode.destroy();
+
+            this.activeBoosterBomb = false;
             this.startBombCount--;
-            EventManager.instance.emit(new UpdateUIEvent(
-                this.tilesRemoveSystem.Score, 
-                this.tilesRemoveSystem.Moves, 
-                this.startBombCount, 
-                this.startTeleportCount)
+
+            EventManager.instance.emit(
+                new UpdateUIEvent(
+                    this.tilesRemoveSystem.Score,
+                    this.tilesRemoveSystem.Moves,
+                    this.startBombCount,
+                    this.startTeleportCount
+                )
             );
+
             return;
         }
         // Используем TilesGroupSystem для поиска всех связанных тайлов, которые принадлежат к той же группе, 
@@ -154,7 +200,33 @@ class GameManager extends cc.Component
         const group = this.tilesGroupSystem.FindConnectedTilesGroup(event.row, event.col, event.tileGroup);
         
         // Если найдено 2 или более связанных тайлов, удаляем их
-        if(group.length >= 2)
+        if(group.length >= 5)
+        {
+            this.isAnimating = true;
+
+            const clickedTile = this.gridGenerator.gridTiles[event.row][event.col];
+
+            this.tilesRemoveSystem.RemoveTilesWithoutScore(group);
+
+            this.superTile.SpawnSuperTile(clickedTile);
+
+            // удалить без очков
+            //this.tilesRemoveSystem.RemoveTilesWithoutScore(group);
+
+            // создать супер тайл
+            //this.superTile.SpawnSuperTile(event.row, event.col);
+
+            this.tilesGroupSystem.Init(this.gridGenerator);
+
+            this.scheduleOnce(() =>
+            {
+                this.moveTiles.ApplyMove();
+                this.isAnimating = false;
+            }, 0.3);
+
+            return;
+        }
+        else if(group.length >= 2)
         {
             EventManager.instance.emit(
                 new TilesRemovedEvent(group, group.length)
@@ -247,7 +319,7 @@ class GameManager extends cc.Component
     public ActivateBomb(): void 
     {
         if (this.activeBoosterBomb) return;
-        this.activeBoosterBomb = new BoosterBomb(this.gridGenerator.gridTiles);
+        this.activeBoosterBomb = true;
     }
 
     public ActivateTeleport(): void

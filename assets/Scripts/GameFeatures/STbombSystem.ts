@@ -4,17 +4,17 @@
 
 
 // @cc._decorator.ccclass
-// export class BoosterBomb extends BombSystem
+// export class STbombSystem extends BombSystem
 // {
-//     constructor(grid: cc.Node[][])
+//     constructor(grid: cc.Node [][])
 //     {
-//         super(1, grid);
+//         super(2, grid);
 //     }
 
 //     public explode(row: number, col: number): void
 //     {
 //         const cells = this.getCellsInRadius(row, col);
-
+    
 //         EventManager.instance.emit(
 //             new TilesRemovedEvent(cells, cells.length)
 //         );

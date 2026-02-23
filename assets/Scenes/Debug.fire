@@ -90,16 +90,16 @@
         "__id__": 63
       },
       {
-        "__id__": 85
+        "__id__": 86
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 93
+        "__id__": 94
       },
       {
-        "__id__": 94
+        "__id__": 95
       }
     ],
     "_prefab": null,
@@ -1071,7 +1071,7 @@
         "__id__": 24
       },
       {
-        "__id__": 81
+        "__id__": 82
       },
       {
         "__id__": 45
@@ -1626,6 +1626,9 @@
       },
       {
         "__id__": 62
+      },
+      {
+        "__id__": 81
       }
     ],
     "_prefab": null,
@@ -1689,6 +1692,9 @@
     },
     "randomTileSystemNode": {
       "__id__": 40
+    },
+    "superTileSystem": {
+      "__id__": 32
     },
     "_id": "89A/CMmyFDDabLQ/OssyAT"
   },
@@ -2023,8 +2029,8 @@
     "teleportLabel": {
       "__id__": 47
     },
-    "goalScore": 450,
-    "movesCount": 10,
+    "goalScore": 1000,
+    "movesCount": 15,
     "ScoreMultiplier": 10,
     "BoosterBombCount": 5,
     "BoosterTeleportCount": 5,
@@ -3887,6 +3893,24 @@
     "_id": "a8Mffca35Mk55qUcatmgPK"
   },
   {
+    "__type__": "20627VV2ZBKvKW9jboduiut",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 32
+    },
+    "_enabled": true,
+    "superTilesPrefab": [
+      {
+        "__uuid__": "801e8902-3767-48d1-917f-0b7b54efc5f8"
+      },
+      {
+        "__uuid__": "4d2ecb26-c450-419c-9424-76a241fdc7de"
+      }
+    ],
+    "_id": "c0g8Fk0pRMz4WkKmvol0mj"
+  },
+  {
     "__type__": "cc.Node",
     "_name": "block_bomb",
     "_objFlags": 0,
@@ -3897,10 +3921,10 @@
     "_active": false,
     "_components": [
       {
-        "__id__": 82
+        "__id__": 83
       },
       {
-        "__id__": 83
+        "__id__": 84
       }
     ],
     "_prefab": null,
@@ -3956,7 +3980,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 81
+      "__id__": 82
     },
     "_enabled": true,
     "_materials": [
@@ -3988,7 +4012,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 81
+      "__id__": 82
     },
     "_enabled": true,
     "_normalMaterial": null,
@@ -3997,7 +4021,7 @@
     "zoomScale": 1.2,
     "clickEvents": [
       {
-        "__id__": 84
+        "__id__": 85
       }
     ],
     "_N$interactable": true,
@@ -4074,13 +4098,13 @@
     },
     "_children": [
       {
-        "__id__": 86
+        "__id__": 87
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 91
+        "__id__": 92
       }
     ],
     "_prefab": null,
@@ -4136,20 +4160,20 @@
     "_name": "Background",
     "_objFlags": 512,
     "_parent": {
-      "__id__": 85
+      "__id__": 86
     },
     "_children": [
       {
-        "__id__": 87
+        "__id__": 88
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 89
+        "__id__": 90
       },
       {
-        "__id__": 90
+        "__id__": 91
       }
     ],
     "_prefab": null,
@@ -4205,13 +4229,13 @@
     "_name": "Label",
     "_objFlags": 512,
     "_parent": {
-      "__id__": 86
+      "__id__": 87
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 88
+        "__id__": 89
       }
     ],
     "_prefab": null,
@@ -4267,7 +4291,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 87
+      "__id__": 88
     },
     "_enabled": true,
     "_materials": [
@@ -4300,7 +4324,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 86
+      "__id__": 87
     },
     "_enabled": true,
     "_materials": [
@@ -4332,7 +4356,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 86
+      "__id__": 87
     },
     "_enabled": true,
     "alignMode": 0,
@@ -4359,7 +4383,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 85
+      "__id__": 86
     },
     "_enabled": true,
     "_normalMaterial": null,
@@ -4368,7 +4392,7 @@
     "zoomScale": 1.2,
     "clickEvents": [
       {
-        "__id__": 92
+        "__id__": 93
       }
     ],
     "_N$interactable": true,
@@ -4436,7 +4460,7 @@
       "__uuid__": "29158224-f8dd-4661-a796-1ffab537140e"
     },
     "_N$target": {
-      "__id__": 86
+      "__id__": 87
     },
     "_id": "826VbbDMBDUIQVOkhFDsSe"
   },

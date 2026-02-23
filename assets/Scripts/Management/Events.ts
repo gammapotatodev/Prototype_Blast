@@ -85,3 +85,16 @@ export class GameOverEvent extends BaseEvent
     }
 
 }
+
+// export class SuperTileEvent extends BaseEvent
+// {
+//     public static readonly Type = "SuperTileEvent"
+
+//     constructor(
+//         public readonly row: number,
+//         public readonly col: number
+//     )
+//     {
+//         super(SuperTileEvent.Type)
+//     }
+// }

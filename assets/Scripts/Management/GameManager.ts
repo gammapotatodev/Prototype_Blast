@@ -9,6 +9,7 @@ import { UpdateUISystem } from "./UpdateUISystem";
 import { RemoveTilesSystem } from "./RemoveTilesSystem";
 import { RefreshGridSystem } from "./RefreshGridSystem";
 import { BoosterBomb } from "../GameFeatures/BoosterBomb";
+import { BoosterTeleport } from "../GameFeatures/BoosterTeleport";
 
 // Менеджер игры, управляющий логикой игры и событиями
 
@@ -33,9 +34,11 @@ class GameManager extends cc.Component
     private randomTileSystem: RandomTileSystem = null!;
     private tilesRemoveSystem: RemoveTilesSystem = null!;
     private refreshTilesSystem: RefreshGridSystem = null!;
-    private activeBoosterBomb: BoosterBomb = null!;
     private moveTiles : MoveTilesSystem = null!;
     private updateUISystem: UpdateUISystem = null!;
+    private activeBoosterBomb: BoosterBomb = null!;
+    private activeBoosterTeleport: BoosterTeleport = null!;
+    private teleportFirstTile: cc.Node = null!;
     
     private tilesGroupSystem: TilesGroupSystem = new TilesGroupSystem()
 
@@ -84,6 +87,44 @@ class GameManager extends cc.Component
     {
         if(this.isAnimating)
             return;
+
+        const clickedTile = this.gridGenerator.gridTiles[event.row][event.col];
+
+        // ===== TELEPORT BOOSTER =====
+        if (this.activeBoosterTeleport)
+        {
+            if (!this.teleportFirstTile)
+            {
+                // выбираем первый тайл
+                this.teleportFirstTile = clickedTile;
+                return;
+            }
+            else
+            {
+                // выбираем второй тайл и телепортируем
+                this.isAnimating = true;
+
+                this.activeBoosterTeleport.TeleportTiles(
+                    this.teleportFirstTile,
+                    clickedTile
+                );
+
+                // сброс состояния
+                this.teleportFirstTile = null;
+                this.activeBoosterTeleport = null;
+
+                // обновляем группы после телепорта
+                this.tilesGroupSystem.Init(this.gridGenerator);
+
+                this.scheduleOnce(() =>
+                {
+                    this.isAnimating = false;
+                }, 0.2);
+
+                return;
+            }
+        }
+
         if (this.activeBoosterBomb) 
         {
             this.isAnimating = true;
@@ -184,6 +225,18 @@ class GameManager extends cc.Component
     {
         if (this.activeBoosterBomb) return;
         this.activeBoosterBomb = new BoosterBomb(this.gridGenerator.gridTiles);
+    }
+
+    public ActivateTeleport(): void
+    {
+        if (this.activeBoosterTeleport) return;
+
+        this.activeBoosterTeleport = new BoosterTeleport(
+            this.gridGenerator,
+            this.gridSize
+        );
+
+        this.teleportFirstTile = null;
     }
 
     onDestroy(): void 

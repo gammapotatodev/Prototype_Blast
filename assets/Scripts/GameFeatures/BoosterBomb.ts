@@ -1,6 +1,5 @@
 import { EventManager } from "../Management/EventManager";
 import { TilesRemovedEvent } from "../Management/Events";
-import { TileSystem } from "../TileProperties/TileSystem";
 import { BombSystem } from "./BombSystem";
 
 

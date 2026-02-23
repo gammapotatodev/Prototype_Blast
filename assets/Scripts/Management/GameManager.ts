@@ -94,18 +94,17 @@ class GameManager extends cc.Component
 
         const clickedTile = this.gridGenerator.gridTiles[event.row][event.col];
 
-        // ===== TELEPORT BOOSTER =====
         if (this.activeBoosterTeleport && this.startTeleportCount > 0)
         {
             if (!this.teleportFirstTile)
             {
-                // выбираем первый тайл
+                // Выбираем первый тайл
                 this.teleportFirstTile = clickedTile;
                 return;
             }
             else
             {
-                // выбираем второй тайл и телепортируем
+                // Выбираем второй тайл и телепортируем
                 this.isAnimating = true;
 
                 this.activeBoosterTeleport.TeleportTiles(
@@ -113,11 +112,11 @@ class GameManager extends cc.Component
                     clickedTile
                 );
 
-                // сброс состояния
+                // Сброс состояния
                 this.teleportFirstTile = null;
                 this.activeBoosterTeleport = null;
 
-                // обновляем группы после телепорта
+                // Обновляем группы после телепорта
                 this.tilesGroupSystem.Init(this.gridGenerator);
 
                 this.scheduleOnce(() =>
@@ -180,6 +179,12 @@ class GameManager extends cc.Component
     {
         this.isAnimating = true;
         this.tilesRemoveSystem.RemoveTiles(event.removedTiles);
+        EventManager.instance.emit(new UpdateUIEvent(
+            this.tilesRemoveSystem.Score, 
+            this.tilesRemoveSystem.Moves, 
+            this.startBombCount, 
+            this.startTeleportCount)
+        );
         this.CheckGameOver(
             this.tilesRemoveSystem.Score,
             this.tilesRemoveSystem.Moves

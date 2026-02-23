@@ -1,7 +1,5 @@
 import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { TileSystem } from "../TileProperties/TileSystem";
-import { EventManager } from "./EventManager";
-import { TilesRemovedEvent, UpdateUIEvent } from "./Events";
 import { UpdateUISystem } from "./UpdateUISystem";
 
 @cc._decorator.ccclass
@@ -41,8 +39,6 @@ export class RemoveTilesSystem
         const gainedScore = this.updateUISystem.ScoreMultiplier * tiles.length;
 
         this.currentScore += gainedScore;
-
-        EventManager.instance.emit(new UpdateUIEvent(this.currentScore, this.currentMoves));
         
     }
 

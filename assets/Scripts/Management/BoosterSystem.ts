@@ -3,6 +3,7 @@ import { BoosterTeleport } from "../GameFeatures/BoosterTeleport";
 import { GridGenerator } from "../GridSystem/GenerateGridSystem";
 import { GameSateSystem } from "./GameStateSystem";
 
+// Система управления бустерами
 
 @cc._decorator.ccclass
 export class BoosterSystem 

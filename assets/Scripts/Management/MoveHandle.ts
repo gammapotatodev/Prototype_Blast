@@ -9,6 +9,7 @@ import { TilesRemovedEvent } from "./Events";
 import { GameSateSystem } from "./GameStateSystem";
 import { RemoveTilesSystem } from "./RemoveTilesSystem";
 
+// Система обработки игровых ходов (использование супертайла или обычный клик) 
 
 @cc._decorator.ccclass
 export class MoveHandle extends cc.Component 

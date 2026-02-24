@@ -1,4 +1,5 @@
 
+// Система управления состоянием игры (UI): ходы, очки, использование бустеров
 
 @cc._decorator.ccclass
 export class GameSateSystem
